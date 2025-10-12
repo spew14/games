@@ -36,6 +36,25 @@
         .title-glow {
             text-shadow: 0 0 8px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
         }
+        #chat-messages {
+            scroll-behavior: smooth;
+        }
+        .favorite-star {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            color: #4a5568; /* gray-600 */
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .favorite-star.favorited {
+            color: #f59e0b; /* amber-500 */
+            transform: scale(1.2);
+        }
+        .game-card {
+            position: relative;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white">
@@ -44,15 +63,83 @@
     <div id="app-container" class="container mx-auto p-4 sm:p-6 lg:p-8">
         
         <!-- Header -->
-        <header class="text-center mb-8">
+        <header class="text-center mb-8 relative">
             <h1 class="text-4xl sm:text-5xl md:text-6xl font-press-start title-glow">SPEW14 UNBLOCKED GAMES</h1>
             <p class="text-gray-400 mt-2 text-sm sm:text-base">Unblocked games given to you by the Everything Site.</p>
         </header>
+
+        <!-- Action Buttons -->
+        <div id="action-buttons" class="flex justify-center items-center gap-4 mb-8">
+            <button id="messaging-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+                Messaging
+            </button>
+            <button id="favorites-btn" class="hidden bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+                Favorites
+            </button>
+            <button id="account-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+                Account
+            </button>
+        </div>
 
         <!-- Game Grid -->
         <main id="game-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
             <!-- Game cards will be injected here by JavaScript -->
         </main>
+
+        <!-- Account View (Initially Hidden) -->
+        <div id="account-view" class="hidden w-full max-w-md mx-auto bg-gray-800 p-8 rounded-lg">
+             <!-- Logged Out View -->
+            <div id="logged-out-view">
+                <h2 class="text-2xl font-press-start text-center mb-6">Account</h2>
+                <form id="login-form" class="mb-6">
+                    <h3 class="text-lg font-bold mb-2 text-center">Login</h3>
+                    <input type="email" id="login-email" placeholder="Email" class="w-full bg-gray-700 text-white p-3 mb-3 rounded-md focus:outline-none" required>
+                    <input type="password" id="login-password" placeholder="Password" class="w-full bg-gray-700 text-white p-3 mb-3 rounded-md focus:outline-none" required>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">Login</button>
+                </form>
+                <hr class="border-gray-600 my-6">
+                <form id="signup-form">
+                     <h3 class="text-lg font-bold mb-2 text-center">Create Account</h3>
+                    <input type="email" id="signup-email" placeholder="Email" class="w-full bg-gray-700 text-white p-3 mb-3 rounded-md focus:outline-none" required>
+                    <input type="password" id="signup-password" placeholder="Password" class="w-full bg-gray-700 text-white p-3 mb-3 rounded-md focus:outline-none" required>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition">Sign Up</button>
+                </form>
+            </div>
+            <!-- Logged In View -->
+            <div id="logged-in-view" class="hidden text-center">
+                 <h2 class="text-2xl font-press-start text-center mb-4">My Account</h2>
+                 <p class="mb-6">Welcome, <span id="user-email" class="font-bold"></span>!</p>
+                 <button id="logout-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition">Logout</button>
+            </div>
+             <button id="back-to-games-from-account-btn" class="w-full mt-6 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition">Back to Games</button>
+        </div>
+
+
+        <!-- Messaging View (Initially Hidden) -->
+        <div id="messaging-view" class="hidden">
+            <!-- Join Server View -->
+            <div id="join-view" class="w-full max-w-md mx-auto bg-gray-800 p-8 rounded-lg">
+                <h2 class="text-2xl font-press-start text-center mb-6">Choose a Server</h2>
+                <div id="server-list" class="w-full flex flex-col gap-3 mb-4">
+                    <!-- Server buttons will be injected here -->
+                </div>
+                <button id="back-to-games-btn" class="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition duration-300">Back to Games</button>
+            </div>
+            <!-- Chat View -->
+            <div id="chat-view" class="hidden w-full max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="server-title" class="text-2xl sm:text-3xl font-press-start"></h2>
+                    <button id="leave-server-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Leave</button>
+                </div>
+                <div id="chat-messages" class="h-96 bg-gray-800 rounded-lg p-4 overflow-y-auto mb-4 flex flex-col gap-3">
+                    <!-- Messages will be injected here -->
+                </div>
+                <form id="message-form" class="flex gap-4">
+                    <input type="text" id="message-input" placeholder="Type a message..." class="flex-grow bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Send</button>
+                </form>
+            </div>
+        </div>
 
         <!-- Game Player Container (Initially Hidden) -->
         <div id="game-player" class="hidden flex-col items-center justify-center">
@@ -80,7 +167,13 @@
 
     </div>
 
-    <script>
+    <script type="module">
+        // --- Firebase Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Element References ---
         const gameGrid = document.getElementById('game-grid');
         const gamePlayer = document.getElementById('game-player');
         const appContainer = document.getElementById('app-container');
@@ -88,145 +181,173 @@
         const gameContainer = document.getElementById('game-container');
         const gameInstructions = document.getElementById('game-instructions');
         const closeGameBtn = document.getElementById('close-game');
+        const actionButtons = document.getElementById('action-buttons');
+        const favoritesBtn = document.getElementById('favorites-btn');
+        
+        // Account UI
+        const accountBtn = document.getElementById('account-btn');
+        const accountView = document.getElementById('account-view');
+        const loggedOutView = document.getElementById('logged-out-view');
+        const loggedInView = document.getElementById('logged-in-view');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const userEmailSpan = document.getElementById('user-email');
+        const logoutBtn = document.getElementById('logout-btn');
+        const backToGamesFromAccountBtn = document.getElementById('back-to-games-from-account-btn');
 
-        let currentGame = null;
-        let animationFrameId = null;
+        // Messaging UI
+        const messagingBtn = document.getElementById('messaging-btn');
+        const messagingView = document.getElementById('messaging-view');
+        const joinView = document.getElementById('join-view');
+        const chatView = document.getElementById('chat-view');
+        const serverListContainer = document.getElementById('server-list');
+        const backToGamesBtn = document.getElementById('back-to-games-btn');
+        const serverTitle = document.getElementById('server-title');
+        const leaveServerBtn = document.getElementById('leave-server-btn');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
 
-        // --- GAME DEFINITIONS ---
-        // To add a new game from an HTML file, just add a new object to this array with a 'url'.
+        // --- App State ---
+        let db, auth, userId, appId, userIsAnonymous;
+        let unsubscribeMessages = null;
+        let userFavorites = [];
+        let isShowingFavorites = false;
+
+        // --- DATA DEFINITIONS ---
         const games = [
-            {
-                id: 'retrobowl',
-                name: 'Retro Bowl',
-                icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/retro_bowl_icon.webp', // Example PNG URL
-                instructions: 'i wish it was madden instead',
-                url: 'https://db.duckmath.org/html/retro_bowl/index.html' // Example: Loads from an external HTML file
-            },
-            {
-                id: 'buckshotroulette',
-                name: 'Buckshot Roulette',
-                icon: 'https://i.ytimg.com/vi/hGIG6hKEHI0/hqdefault.jpg', // Example PNG URL
-                instructions: 'Classic buckshot roulette.',
-                url: 'https://db.duckmath.org/html/buckshot_roulette/index.html' // Loads the game from the specified URL
-            },
-            {
-                id: 'clashroyale',
-                name: 'Clash Royale',
-                icon: 'https://play-lh.googleusercontent.com/gnSC6s8-6Tjc4uhvDW7nfrSJxpbhllzYhgX8y374N1LYvWBStn2YhozS9XXaz1T_Pi2q', // Example PNG URL
-                instructions: 'Use your mouse to dodge the incoming asteroids!',
-                url: 'https://db.duckmath.org/html/clash_royale/index.html'
-            },
-            {
-                id: 'cc3d',
-                name: 'Crazy Cattle 3d',
-                icon: 'https://crazycattle3dgithub.io/data/image/crazy-cattle-3d-online.png', // Example PNG URL
-                instructions: 'CC3D kinda tuff back in like may or somethin',
-                url: 'https://db.duckmath.org/html/crazycattle3d/index.html' // Example: Loads from an external HTML file
-            },
-            {
-                id: 'twerkrace',
-                name: 'Twerk Race 3d',
-                icon: '', // Example PNG URL
-                instructions: 'ts a freaky ahh game',
-                url: 'https://db.duckmath.org/html/twerk_race_3d/index.html' // Example: Loads from an external HTML file
-            },
-            {
-                id: 'spiralroll',
-                name: 'Spiral Roll',
-                icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/spiralroll.webp', // Example PNG URL
-                instructions: 'omg so satisfying',
-                url: 'https://db.duckmath.org/html/spiral_roll/index.html' // Example: Loads from an external HTML file
-            },
-            {
-                id: 'stickmanhook',
-                name: 'Stickman Hook',
-                icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/stickmanhook.webp', // Example PNG URL
-                instructions: 'holy mobile game ahh',
-                url: 'https://db.duckmath.org/html/stickman_hook/index.html' // Example: Loads from an external HTML file
-            },{
-                id: 'ragdollarchers',
-                name: 'Ragdoll Archers',
-                icon: 'https://play-lh.googleusercontent.com/XMiWEMPbuq13oVcwYQ6ySLtZnBf7WpJ3rb7v-TM4MdFOvWfo1Z2hzSEAApRXzEcshjY', // Example PNG URL
-                instructions: 'this game is so addicting',
-                url: 'https://db.duckmath.org/html/ragdoll_archers/index.html' // Example: Loads from an external HTML file
-            },
-            {
-                id: 'stealbrainrot',
-                name: 'Steal A brainrot',
-                icon: 'https://play-lh.googleusercontent.com/iR1JNfTr0W_fDN8zAfuZYPYHdVjI1UzNSVFkbAyXwN8e3jEuKsyu73zqjVdHDxNEfQqLhC78EaPzZPtWNL-X', // Example PNG URL
-                instructions: 'ts is so corny but ik some of u like steal a brainrot',
-                url: 'https://db.duckmath.org/html/steal_a_brainrot/index.html' // Example: Loads from an external HTML file
-            },
-            {
-                id: 'stuntcars',
-                name: 'Madalin Stunt Cars 2',
-                icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/madalin.webp', // Example PNG URL
-                instructions: 'ITS THE REAL BEAM.MG',
-                url: 'https://db.duckmath.org/html/madalin_stunt_cars_2/index.html' // Example: Loads from an external HTML file
-            },
+            { id: 'retrobowl', name: 'Retro Bowl', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/retro_bowl_icon.webp', instructions: 'i wish it was madden instead', url: 'https://db.duckmath.org/html/retro_bowl/index.html' },
+            { id: 'buckshotroulette', name: 'Buckshot Roulette', icon: 'https://i.ytimg.com/vi/hGIG6hKEHI0/hqdefault.jpg', instructions: 'Classic buckshot roulette.', url: 'https://db.duckmath.org/html/buckshot_roulette/index.html' },
+            { id: 'clashroyale', name: 'Clash Royale', icon: 'https://play-lh.googleusercontent.com/gnSC6s8-6Tjc4uhvDW7nfrSJxpbhllzYhgX8y374N1LYvWBStn2YhozS9XXaz1T_Pi2q', instructions: 'Use your mouse to dodge the incoming asteroids!', url: 'https://db.duckmath.org/html/clash_royale/index.html' },
+            { id: 'cc3d', name: 'Crazy Cattle 3d', icon: 'https://crazycattle3dgithub.io/data/image/crazy-cattle-3d-online.png', instructions: 'CC3D kinda tuff back in like may or somethin', url: 'https://db.duckmath.org/html/crazycattle3d/index.html' },
+            { id: 'twerkrace', name: 'Twerk Race 3d', icon: '', instructions: 'ts a freaky ahh game', url: 'https://db.duckmath.org/html/twerk_race_3d/index.html' },
+            { id: 'spiralroll', name: 'Spiral Roll', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/spiralroll.webp', instructions: 'omg so satisfying', url: 'https://db.duckmath.org/html/spiral_roll/index.html' },
+            { id: 'stickmanhook', name: 'Stickman Hook', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/stickmanhook.webp', instructions: 'holy mobile game ahh', url: 'https://db.duckmath.org/html/stickman_hook/index.html' },
+            { id: 'ragdollarchers', name: 'Ragdoll Archers', icon: 'https://play-lh.googleusercontent.com/XMiWEMPbuq13oVcwYQ6ySLtZnBf7WpJ3rb7v-TM4MdFOvWfo1Z2hzSEAApRXzEcshjY', instructions: 'this game is so addicting', url: 'https://db.duckmath.org/html/ragdoll_archers/index.html' },
+            { id: 'stealbrainrot', name: 'Steal A brainrot', icon: 'https://play-lh.googleusercontent.com/iR1JNfTr0W_fDN8zAfuZYPYHdVjI1UzNSVFkbAyXwN8e3jEuKsyu73zqjVdHDxNEfQqLhC78EaPzZPtWNL-X', instructions: 'ts is so corny but ik some of u like steal a brainrot', url: 'https://db.duckmath.org/html/steal_a_brainrot/index.html' },
+            { id: 'stuntcars', name: 'Madalin Stunt Cars 2', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/madalin.webp', instructions: 'ITS THE REAL BEAM.MG', url: 'https://db.duckmath.org/html/madalin_stunt_cars_2/index.html' },
+            { id: '', name: '', icon: '', instructions: '', url: '' },
+            { id: 'basketrandom', name: 'Basket Random', icon: 'https://scout.wgimager.com/f_webp/q_90/https://static.wgplayground.com/43105ae03bf75070f5e80a76bb59ac6e/wgplayground/c8a520f67cc563041d2a75bd8223939e.jpg', instructions: 'LEBROOOOOOOOOON', url: 'https://db.duckmath.org/html/basket_random/index.html' },
+            { id: 'sovietsniper', name: 'Soviet Sniper', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/cod.webp', instructions: 'not real call of duty', url: 'https://db.duckmath.org/html/soviet_sniper/index.html' },
+            { id: 'helixjump', name: 'Helix Jump', icon: 'https://play-lh.googleusercontent.com/FJ_eBYG23JkzujCEPHIjUAUJcQOGfZzPxKCGZ9lOmj9aBZABvdftqAAx8MyDbpEXeRzC', instructions: 'molbile game 2', url: 'https://db.duckmath.org/html/helix_jump/index.html' },
+            { id: '', name: '', icon: '', instructions: '', url: '' },
+            { id: '', name: '', icon: '', instructions: '', url: '' },
         ];
+        const servers = [ 'General 💬', 'Retro Bowl 🏈', 'Buckshot 🎲', 'Clash Royale 👑', 'Stunt Cars 🚗' ];
 
-        // --- CORE APP LOGIC ---
+        // --- Firebase Initialization & Auth Handling ---
+        async function initFirebase() {
+            try {
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+                
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
 
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIsAnonymous = user.isAnonymous;
+                        if (!user.isAnonymous) {
+                            updateAccountUI(user);
+                            await loadFavorites();
+                            favoritesBtn.classList.remove('hidden');
+                        } else {
+                            updateAccountUI(null);
+                            userFavorites = [];
+                            favoritesBtn.classList.add('hidden');
+                        }
+                    } else {
+                        userId = null;
+                        userIsAnonymous = true;
+                        updateAccountUI(null);
+                        userFavorites = [];
+                        favoritesBtn.classList.add('hidden');
+                        await signInAnonymously(auth);
+                    }
+                    updateFavoritesUI();
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                alert("Could not connect to core services.");
+            }
+        }
+        
+        // --- UI Navigation ---
         function showGameGrid() {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-            
-            // Stop any potential game logic from running in background
-            if (currentGame && currentGame.cleanup && typeof currentGame.cleanup === 'function') {
-                currentGame.cleanup();
-            }
-            
-            currentGame = null;
-
-            // Hide player, show grid
-            appContainer.classList.add('container', 'mx-auto', 'p-4', 'sm:p-6', 'lg:p-8');
-            gamePlayer.classList.add('hidden');
-            gamePlayer.classList.remove('flex');
             gameGrid.classList.remove('hidden');
-
-            gameContainer.innerHTML = ''; // Clean up the game container
+            actionButtons.classList.remove('hidden');
+            
+            gamePlayer.classList.add('hidden');
+            messagingView.classList.add('hidden');
+            accountView.classList.add('hidden');
+            
+            leaveChat(); 
+            
+            // Reset favorites view
+            isShowingFavorites = false;
+            favoritesBtn.textContent = 'Favorites';
+            document.querySelectorAll('.game-card').forEach(card => card.classList.remove('hidden'));
         }
 
+        function showMessagingView() {
+            gameGrid.classList.add('hidden');
+            actionButtons.classList.add('hidden');
+            messagingView.classList.remove('hidden');
+            joinView.classList.remove('hidden');
+            chatView.classList.add('hidden');
+        }
+
+        function showAccountView() {
+             gameGrid.classList.add('hidden');
+             actionButtons.classList.add('hidden');
+             messagingView.classList.add('hidden');
+             accountView.classList.remove('hidden');
+        }
+
+        // --- CORE APP LOGIC ---
         function createGameCards() {
-            gameGrid.innerHTML = ''; // Clear existing cards
-            games.forEach(game => {
+            gameGrid.innerHTML = '';
+            games.filter(game => game.id).forEach(game => {
                 const card = document.createElement('div');
                 card.className = 'game-card bg-gray-800 rounded-lg p-4 cursor-pointer transform hover:scale-105 hover:bg-gray-700 transition duration-300 ease-in-out flex flex-col';
                 card.dataset.gameId = game.id;
-
+                
                 card.innerHTML = `
+                    <span class="favorite-star" data-game-id="${game.id}">&#9734;</span>
                     <div class="w-full aspect-square rounded-md overflow-hidden mb-3">
                          <img src="${game.icon}" alt="${game.name}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/300x300/1a202c/ffffff?text=Error';">
                     </div>
                     <h3 class="font-semibold text-base text-center truncate mt-auto">${game.name}</h3>
                 `;
-                
-                card.addEventListener('click', () => launchGame(game.id));
+
+                card.querySelector('img').parentElement.addEventListener('click', () => launchGame(game.id));
+                card.querySelector('h3').addEventListener('click', () => launchGame(game.id));
+                card.querySelector('.favorite-star').addEventListener('click', (e) => {
+                    e.stopPropagation(); 
+                    toggleFavorite(game.id);
+                });
+
                 gameGrid.appendChild(card);
             });
+            updateFavoritesUI();
         }
 
         function launchGame(gameId) {
             const game = games.find(g => g.id === gameId);
             if (!game) return;
 
-            currentGame = game;
-
-            // Hide grid, show player
-            appContainer.classList.remove('container', 'mx-auto', 'p-4', 'sm:p-6', 'lg:p-8');
             gameGrid.classList.add('hidden');
+            actionButtons.classList.add('hidden');
             gamePlayer.classList.remove('hidden');
-            gamePlayer.classList.add('flex');
-
+            
             gameTitle.textContent = game.name;
             gameInstructions.textContent = game.instructions;
-            gameContainer.innerHTML = ''; // Clear previous game
+            gameContainer.innerHTML = ''; 
 
             if (game.url) {
-                // Load external HTML game
                 const iframe = document.createElement('iframe');
                 iframe.className = "w-full h-full border-0";
                 iframe.src = game.url;
@@ -236,11 +357,205 @@
             } 
         }
 
+        // --- Account & Favorites Logic ---
+        function updateAccountUI(user) {
+            if(user && !user.isAnonymous) {
+                loggedOutView.classList.add('hidden');
+                loggedInView.classList.remove('hidden');
+                userEmailSpan.textContent = user.email;
+            } else {
+                loggedOutView.classList.remove('hidden');
+                loggedInView.classList.add('hidden');
+                userEmailSpan.textContent = '';
+            }
+        }
+
+        async function handleSignUp(e) {
+            e.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                showGameGrid();
+            } catch (error) {
+                alert(`Signup failed: ${error.message}`);
+            }
+        }
+        
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                 showGameGrid();
+            } catch (error) {
+                alert(`Login failed: ${error.message}`);
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                 alert(`Logout failed: ${error.message}`);
+            }
+        }
+
+        async function toggleFavorite(gameId) {
+            if (userIsAnonymous) {
+                alert("Please create an account to save favorites!");
+                return;
+            }
+            const favIndex = userFavorites.indexOf(gameId);
+            if (favIndex > -1) {
+                userFavorites.splice(favIndex, 1);
+            } else {
+                userFavorites.push(gameId);
+            }
+            
+            const userDocRef = doc(db, `/artifacts/${appId}/users/${userId}`);
+            await setDoc(userDocRef, { favorites: userFavorites });
+
+            updateFavoritesUI();
+        }
+        
+        function toggleFavoritesView() {
+            isShowingFavorites = !isShowingFavorites;
+            document.querySelectorAll('.game-card').forEach(card => {
+                const gameId = card.dataset.gameId;
+                if (isShowingFavorites && !userFavorites.includes(gameId)) {
+                    card.classList.add('hidden');
+                } else {
+                    card.classList.remove('hidden');
+                }
+            });
+            favoritesBtn.textContent = isShowingFavorites ? 'All Games' : 'Favorites';
+        }
+
+
+        async function loadFavorites() {
+            if (userIsAnonymous || !userId) return;
+            const userDocRef = doc(db, `/artifacts/${appId}/users/${userId}`);
+            const docSnap = await getDoc(userDocRef);
+            if (docSnap.exists() && docSnap.data().favorites) {
+                userFavorites = docSnap.data().favorites;
+            } else {
+                userFavorites = [];
+            }
+            updateFavoritesUI();
+        }
+
+        function updateFavoritesUI() {
+            document.querySelectorAll('.favorite-star').forEach(star => {
+                const gameId = star.dataset.gameId;
+                if(userFavorites.includes(gameId)) {
+                    star.classList.add('favorited');
+                    star.innerHTML = '&#9733;';
+                } else {
+                    star.classList.remove('favorited');
+                    star.innerHTML = '&#9734;';
+                }
+            });
+        }
+
+
+        // --- Messaging Logic ---
+        function sanitizeForFirestore(text) { return text.replace(/[^a-zA-Z0-9]/g, ''); }
+        function createServerList() {
+            serverListContainer.innerHTML = '';
+            servers.forEach(serverName => {
+                const button = document.createElement('button');
+                button.className = 'w-full bg-gray-700 hover:bg-purple-600 text-white font-bold py-3 rounded-lg transition duration-300';
+                button.textContent = serverName;
+                button.addEventListener('click', () => joinChat(serverName));
+                serverListContainer.appendChild(button);
+            });
+        }
+
+        function joinChat(serverId) {
+            if (!serverId) { alert("Invalid server."); return; }
+            joinView.classList.add('hidden');
+            chatView.classList.remove('hidden');
+            serverTitle.textContent = serverId;
+
+            const sanitizedServerId = sanitizeForFirestore(serverId);
+            const messagesCollectionPath = `/artifacts/${appId}/public/data/chatRooms/${sanitizedServerId}/messages`;
+            const q = query(collection(db, messagesCollectionPath), orderBy("timestamp"));
+
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                chatMessages.innerHTML = '';
+                snapshot.forEach((doc) => { displayMessage(doc.data()); });
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, (error) => {
+                console.error("Error listening to messages:", error);
+                leaveChat();
+            });
+        }
+        
+        function leaveChat() {
+            if (unsubscribeMessages) {
+                unsubscribeMessages();
+                unsubscribeMessages = null;
+            }
+        }
+
+        async function sendMessage(event) {
+            event.preventDefault();
+            const serverId = serverTitle.textContent;
+            const messageText = messageInput.value.trim();
+            if (messageText === '' || !serverId || !userId) return;
+
+            try {
+                 const sanitizedServerId = sanitizeForFirestore(serverId);
+                 const messagesCollectionPath = `/artifacts/${appId}/public/data/chatRooms/${sanitizedServerId}/messages`;
+                 await addDoc(collection(db, messagesCollectionPath), {
+                    text: messageText,
+                    sender: userId,
+                    timestamp: serverTimestamp()
+                });
+                messageInput.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } catch(error) {
+                console.error("Error sending message:", error);
+            }
+        }
+
+        function displayMessage(data) {
+            const messageWrapper = document.createElement('div');
+            const messageBubble = document.createElement('div');
+            messageWrapper.classList.add('flex', 'flex-col', 'max-w-xs');
+            messageBubble.classList.add('px-4', 'py-2', 'rounded-lg', 'break-words');
+            
+            if (data.sender === userId) {
+                messageWrapper.classList.add('self-end', 'items-end');
+                messageBubble.classList.add('bg-purple-600');
+            } else {
+                messageWrapper.classList.add('self-start', 'items-start');
+                messageBubble.classList.add('bg-gray-600');
+            }
+            messageBubble.textContent = data.text;
+            messageWrapper.appendChild(messageBubble);
+            chatMessages.appendChild(messageWrapper);
+        }
+
         // --- Event Listeners & Initializer ---
         closeGameBtn.addEventListener('click', showGameGrid);
+        messagingBtn.addEventListener('click', showMessagingView);
+        backToGamesBtn.addEventListener('click', showGameGrid);
+        leaveServerBtn.addEventListener('click', showGameGrid);
+        messageForm.addEventListener('submit', sendMessage);
+        accountBtn.addEventListener('click', showAccountView);
+        backToGamesFromAccountBtn.addEventListener('click', showGameGrid);
+        signupForm.addEventListener('submit', handleSignUp);
+        loginForm.addEventListener('submit', handleLogin);
+        logoutBtn.addEventListener('click', handleLogout);
+        favoritesBtn.addEventListener('click', toggleFavoritesView);
 
-        // This function runs when the page is loaded and creates the game cards.
+        // --- Initial Load ---
+        initFirebase();
         createGameCards();
+        createServerList();
     </script>
 
 </body>
