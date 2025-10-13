@@ -65,7 +65,7 @@
         <!-- Header -->
         <header class="text-center mb-8 relative">
             <h1 class="text-4xl sm:text-5xl md:text-6xl font-press-start title-glow">SPEW14 UNBLOCKED GAMES</h1>
-            <p class="text-gray-400 mt-2 text-sm sm:text-base">Unblocked games given to you by the Everything Site.</p>
+            <p class="text-gray-400 mt-2 text-sm sm:text-base">Unblocked games given to you by the Everything Site. And new updates every day!</p>
         </header>
 
         <!-- Action Buttons -->
@@ -240,17 +240,17 @@
             try {
                 // This is where you paste your Firebase config object.
                 const firebaseConfig = {
-  apiKey: "AIzaSyCIx3ShvoVQBDBhCvOirjMFOpXXw2sgzLU",
-  authDomain: "spew14-90110.firebaseapp.com",
-  projectId: "spew14-90110",
-  storageBucket: "spew14-90110.firebasestorage.app",
-  messagingSenderId: "734062659575",
-  appId: "1:734062659575:web:c09eff4483980bf78a10f2",
-  measurementId: "G-MN035BGBKB"
-};
+                  apiKey: "AIzaSyCIx3ShvoVQBDBhCvOirjMFOpXXw2sgzLU",
+                  authDomain: "spew14-90110.firebaseapp.com",
+                  projectId: "spew14-90110",
+                  storageBucket: "spew14-90110.firebasestorage.app",
+                  messagingSenderId: "734062659575",
+                  appId: "1:734062659575:web:c09eff4483980bf78a10f2",
+                  measurementId: "G-MN035BGBKB"
+                };
 
-                // A basic check to see if the config is just a placeholder
-                if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("AIza")) {
+                // A basic check to see if the config is empty
+                if (!firebaseConfig.apiKey) {
                      console.warn("Firebase config is not set. Please add your Firebase project's web app configuration to the `firebaseConfig` object in the script.");
                      // Disable features that require Firebase and inform the user
                      messagingBtn.disabled = true;
@@ -595,4 +595,5 @@
 
 </body>
 </html>
+
 
