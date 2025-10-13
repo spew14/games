@@ -230,6 +230,9 @@
             { id: 'basketrandom', name: 'Basket Random', icon: 'https://scout.wgimager.com/f_webp/q_90/https://static.wgplayground.com/43105ae03bf75070f5e80a76bb59ac6e/wgplayground/c8a520f67cc563041d2a75bd8223939e.jpg', instructions: 'LEBROOOOOOOOOON', url: 'https://db.duckmath.org/html/basket_random/index.html' },
             { id: 'sovietsniper', name: 'Soviet Sniper', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/cod.webp', instructions: 'not real call of duty', url: 'https://db.duckmath.org/html/soviet_sniper/index.html' },
             { id: 'helixjump', name: 'Helix Jump', icon: 'https://play-lh.googleusercontent.com/FJ_eBYG23JkzujCEPHIjUAUJcQOGfZzPxKCGZ9lOmj9aBZABvdftqAAx8MyDbpEXeRzC', instructions: 'molbile game 2', url: 'https://db.duckmath.org/html/helix_jump/index.html' },
+            { id: 'ptrack', name: 'Poly Track', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/polytrack.webp', instructions: 'idk anything abt this game', url: 'https://db.duckmath.org/html/polytrack/index.html' },
+            { id: 'happywheels', name: 'Happy Wheels', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/happpywheels.webp', instructions: 'HAPPY WEHLS', url: 'https://db.duckmath.org/html/happy_wheels/index.html' },
+            { id: '', name: '', icon: '', instructions: '', url: '' },
             { id: '', name: '', icon: '', instructions: '', url: '' },
             { id: '', name: '', icon: '', instructions: '', url: '' },
         ];
@@ -569,7 +572,7 @@
                 messageBubble.classList.add('bg-gray-600');
             }
             messageBubble.textContent = data.text;
-            messageWrapper.appendChild(messageBubble);
+            messageWrapper.appendChild(messageWrapper);
             chatMessages.appendChild(messageWrapper);
         }
 
@@ -585,6 +588,30 @@
         loginForm.addEventListener('submit', handleLogin);
         logoutBtn.addEventListener('click', handleLogout);
         favoritesBtn.addEventListener('click', toggleFavoritesView);
+
+        // --- Code Protection ---
+        // Disable right-click context menu
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Disable keyboard shortcuts for developer tools
+        document.addEventListener('keydown', function (e) {
+            // F12
+            if (e.keyCode == 123) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+I
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+J
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+                e.preventDefault();
+            }
+            // Ctrl+U
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+                e.preventDefault();
+            }
+        });
 
         // --- Initial Load ---
         initFirebase();
