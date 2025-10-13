@@ -174,9 +174,9 @@
         import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Element References ---
+        const appContainer = document.getElementById('app-container');
         const gameGrid = document.getElementById('game-grid');
         const gamePlayer = document.getElementById('game-player');
-        const appContainer = document.getElementById('app-container');
         const gameTitle = document.getElementById('game-title');
         const gameContainer = document.getElementById('game-container');
         const gameInstructions = document.getElementById('game-instructions');
@@ -238,9 +238,31 @@
         // --- Firebase Initialization & Auth Handling ---
         async function initFirebase() {
             try {
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-                
+                // This is where you paste your Firebase config object.
+                const firebaseConfig = {
+  apiKey: "AIzaSyCIx3ShvoVQBDBhCvOirjMFOpXXw2sgzLU",
+  authDomain: "spew14-90110.firebaseapp.com",
+  projectId: "spew14-90110",
+  storageBucket: "spew14-90110.firebasestorage.app",
+  messagingSenderId: "734062659575",
+  appId: "1:734062659575:web:c09eff4483980bf78a10f2",
+  measurementId: "G-MN035BGBKB"
+};
+
+                // A basic check to see if the config is just a placeholder
+                if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("AIza")) {
+                     console.warn("Firebase config is not set. Please add your Firebase project's web app configuration to the `firebaseConfig` object in the script.");
+                     // Disable features that require Firebase and inform the user
+                     messagingBtn.disabled = true;
+                     accountBtn.disabled = true;
+                     messagingBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                     accountBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                     messagingBtn.title = "Firebase is not configured.";
+                     accountBtn.title = "Firebase is not configured.";
+                     return; // Stop execution if firebase is not configured
+                }
+
+                appId = firebaseConfig.projectId; // Use projectId as the appId
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -271,7 +293,7 @@
 
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                alert("Could not connect to core services.");
+                alert("Could not connect to core services. Ensure your Firebase config is correct.");
             }
         }
         
@@ -286,7 +308,6 @@
             
             leaveChat(); 
             
-            // Reset favorites view
             isShowingFavorites = false;
             favoritesBtn.textContent = 'Favorites';
             document.querySelectorAll('.game-card').forEach(card => card.classList.remove('hidden'));
@@ -461,7 +482,7 @@
 
 
         // --- Messaging Logic ---
-        function sanitizeForFirestore(text) { return text.replace(/[^a-zA-Z0-9]/g, ''); }
+        function sanitizeForFirestore(text) { return text.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s/g, ''); }
         function createServerList() {
             serverListContainer.innerHTML = '';
             servers.forEach(serverName => {
@@ -481,11 +502,23 @@
 
             const sanitizedServerId = sanitizeForFirestore(serverId);
             const messagesCollectionPath = `/artifacts/${appId}/public/data/chatRooms/${sanitizedServerId}/messages`;
-            const q = query(collection(db, messagesCollectionPath), orderBy("timestamp"));
+            const q = query(collection(db, messagesCollectionPath)); 
 
             unsubscribeMessages = onSnapshot(q, (snapshot) => {
                 chatMessages.innerHTML = '';
-                snapshot.forEach((doc) => { displayMessage(doc.data()); });
+                const messages = [];
+                snapshot.forEach((doc) => {
+                    messages.push(doc.data());
+                });
+
+                messages.sort((a, b) => {
+                    const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
+                    const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+                    return timeA - timeB;
+                });
+
+                messages.forEach(msgData => displayMessage(msgData));
+
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }, (error) => {
                 console.error("Error listening to messages:", error);
@@ -518,6 +551,7 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             } catch(error) {
                 console.error("Error sending message:", error);
+                alert("Message could not be sent.");
             }
         }
 
@@ -556,12 +590,9 @@
         initFirebase();
         createGameCards();
         createServerList();
+        
     </script>
 
 </body>
 </html>
-
-
-
-
 
