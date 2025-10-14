@@ -59,6 +59,12 @@
 </head>
 <body class="bg-gray-900 text-white">
 
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 bg-purple-600 text-white py-3 px-5 rounded-lg shadow-lg transition-all duration-300 opacity-0 transform translate-y-20" style="z-index: 100;">
+        <p>New message in <span id="toast-server-name" class="font-bold"></span>!</p>
+    </div>
+
+
     <!-- Main Container -->
     <div id="app-container" class="container mx-auto p-4 sm:p-6 lg:p-8">
         
@@ -70,8 +76,9 @@
 
         <!-- Action Buttons -->
         <div id="action-buttons" class="flex justify-center items-center gap-4 mb-8">
-            <button id="messaging-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+            <button id="messaging-btn" class="relative bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
                 Messaging
+                <span id="notification-dot" class="hidden absolute top-0 right-0 block h-3 w-3 transform -translate-y-1/2 translate-x-1/2 rounded-full bg-red-600 ring-2 ring-white"></span>
             </button>
             <button id="favorites-btn" class="hidden bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
                 Favorites
@@ -171,7 +178,7 @@
         // --- Firebase Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, orderBy, doc, setDoc, getDoc, limit, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Element References ---
         const appContainer = document.getElementById('app-container');
@@ -183,6 +190,8 @@
         const closeGameBtn = document.getElementById('close-game');
         const actionButtons = document.getElementById('action-buttons');
         const favoritesBtn = document.getElementById('favorites-btn');
+        const toastNotification = document.getElementById('toast-notification');
+        const toastServerName = document.getElementById('toast-server-name');
         
         // Account UI
         const accountBtn = document.getElementById('account-btn');
@@ -197,6 +206,7 @@
 
         // Messaging UI
         const messagingBtn = document.getElementById('messaging-btn');
+        const notificationDot = document.getElementById('notification-dot');
         const messagingView = document.getElementById('messaging-view');
         const joinView = document.getElementById('join-view');
         const chatView = document.getElementById('chat-view');
@@ -213,6 +223,10 @@
         let unsubscribeMessages = null;
         let userFavorites = [];
         let isShowingFavorites = false;
+        let notificationListeners = [];
+        let unreadServers = new Set();
+        let pageLoadTimestamp = Date.now();
+        let toastTimeout = null;
 
         // --- DATA DEFINITIONS ---
         const games = [
@@ -220,7 +234,7 @@
             { id: 'buckshotroulette', name: 'Buckshot Roulette', icon: 'https://i.ytimg.com/vi/hGIG6hKEHI0/hqdefault.jpg', instructions: 'Classic buckshot roulette.', url: 'https://db.duckmath.org/html/buckshot_roulette/index.html' },
             { id: 'clashroyale', name: 'Clash Royale', icon: 'https://play-lh.googleusercontent.com/gnSC6s8-6Tjc4uhvDW7nfrSJxpbhllzYhgX8y374N1LYvWBStn2YhozS9XXaz1T_Pi2q', instructions: 'Use your mouse to dodge the incoming asteroids!', url: 'https://db.duckmath.org/html/clash_royale/index.html' },
             { id: 'cc3d', name: 'Crazy Cattle 3d', icon: 'https://crazycattle3dgithub.io/data/image/crazy-cattle-3d-online.png', instructions: 'CC3D kinda tuff back in like may or somethin', url: 'https://db.duckmath.org/html/crazycattle3d/index.html' },
-            { id: 'twerkrace', name: 'Twerk Race 3d', icon: '', instructions: 'ts a freaky ahh game', url: 'https://db.duckmath.org/html/twerk_race_3d/index.html' },
+            { id: 'twerkrace', name: 'Twerk Race 3d', icon: 'data:image/jpeg;base64,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 OdCe zAjgvHTbp1NSxr xVWpcUeesfWjW1g/QkTAgBACAEAICPy9YNfA9gHW9Jnebh43jmvRhK3RVVLls+w8OY4X7Th5Q57rtX1YzEldUfPbCSVIyOek3iFD1WQ9WXsZzkrabjyqA8QyOkUHE+QUd2Q3YkFZMl9zFsGhCZiL5DQd1t3ma+AXPZrW4qiprl4s6/IcN0dF1XvLwRZlVl8CAgsuWSjtYMHY8D+vtW6nLSxrkuZFraRLPktjxE0PxvoDiBsBXmna+htWx1KJkTLIGtLzg0Fx7AKn2LDdgld2KlkAGSWOuysr+3H8zgq6guKpfvLzGNU6LXXZfXcR3SlnBLFqbNZ2te8uEsmlgGioY0iovLiTj6g3q8w2CWJupXt7Dz5bg69WXSU43toVH/jXKVKCCDwd/uKxXo9hvzS96+RavLsT+XwZ5/xtlLDUQfhd/uJ/wDX8N1y96+Q/wCOxPyf/Z', instructions: 'ts a freaky ahh game', url: 'https://db.duckmath.org/html/twerk_race_3d/index.html' },
             { id: 'spiralroll', name: 'Spiral Roll', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/spiralroll.webp', instructions: 'omg so satisfying', url: 'https://db.duckmath.org/html/spiral_roll/index.html' },
             { id: 'stickmanhook', name: 'Stickman Hook', icon: 'https://raw.githubusercontent.com/duckmath/icons/refs/heads/main/stickmanhook.webp', instructions: 'holy mobile game ahh', url: 'https://db.duckmath.org/html/stickman_hook/index.html' },
             { id: 'ragdollarchers', name: 'Ragdoll Archers', icon: 'https://play-lh.googleusercontent.com/XMiWEMPbuq13oVcwYQ6ySLtZnBf7WpJ3rb7v-TM4MdFOvWfo1Z2hzSEAApRXzEcshjY', instructions: 'this game is so addicting', url: 'https://db.duckmath.org/html/ragdoll_archers/index.html' },
@@ -249,8 +263,8 @@
             { id: 'paperio2', name: 'PAPER IO SO TUFF', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTeBdhYvBzbipaeEDLMKVTjqpEvw_qcoaujQ&s', instructions: 'fart', url: 'https://eus.rubiconproject.com/usync.html' },
             { id: 'templeruntwo', name: 'Temple Run 2', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpOVgPWZY1nST2Hh4h0osetTpjiC4XJhDaPQ&s', instructions: 'loager moblie game 3', url: 'https://games.poki.com/458768/84938be4-42ce-42a8-9968-2f5f2a7618d8?tag=pg-d1e184892bab9bc50453d668a9e838fae0030a46&amp;site_id=3&amp;iso_lang=en&amp;country=US&amp;poki_url=https://poki.com/en/g/temple-run-2&amp;hoist=yes&amp;nonPersonalized=n&amp;cloudsavegames=n&amp;familyFriendly=n&amp;categories=3,4,6,9,93,903,929,1103,1137,1140,1147,1163,1190&amp;special_condition=landing' },
             { id: 'idleminer', name: 'Idle Mining Empire', icon: 'https://unblocked-games.s3.amazonaws.com/media/posts/372/responsive/idle-mining-empire-512-xs.jpg', instructions: 'Mine like minecraft', url: 'https://unblocked-games.s3.amazonaws.com/games/2023/mjs/idle-mining-empire/index.html' },
-            { id: 'motox3m', name: 'Moto X3M', icon: 'https://unblocked-games.s3.amazonaws.com/media/posts/448/responsive/Moto-X3M-Original-512x512-xs.jpg', instructions: 'Wait like coolmathgames', url: '/games/2024/gm/moto-x3m/index.html' },
-            { id: 'brainrotclicker', name: 'Brainrot Clicker', icon: 'https://unblocked-games.s3.amazonaws.com/media/posts/700/responsive/brainrot-clicker-game-xs.webp', instructions: 'some people goon on brainrot', url: '/games/2025/rhm/brainrot-clicker/index.html' },
+            { id: '', name: '', icon: '', instructions: '', url: '' },
+            { id: '', name: '', icon: '', instructions: '', url: '' },
             { id: '', name: '', icon: '', instructions: '', url: '' },
             { id: '', name: '', icon: '', instructions: '', url: '' },
             { id: '', name: '', icon: '', instructions: '', url: '' },
@@ -306,6 +320,8 @@
                             userFavorites = [];
                             favoritesBtn.classList.add('hidden');
                         }
+                         // Setup notifications regardless of user type
+                        setupNotificationListeners();
                     } else {
                         userId = null;
                         userIsAnonymous = true;
@@ -507,8 +523,69 @@
         }
 
 
-        // --- Messaging Logic ---
+        // --- Messaging & Notification Logic ---
+        function showToast(serverName) {
+            // Don't show toast if chat view is active and it's for the current server
+            if (!chatView.classList.contains('hidden') && serverTitle.textContent === serverName) {
+                return;
+            }
+        
+            // If a toast is already showing, clear its hide timer
+            if (toastTimeout) {
+                clearTimeout(toastTimeout);
+            }
+
+            toastServerName.textContent = serverName;
+            toastNotification.classList.remove('opacity-0', 'translate-y-20');
+
+            // Set a timer to hide it again
+            toastTimeout = setTimeout(() => {
+                toastNotification.classList.add('opacity-0', 'translate-y-20');
+            }, 4000); // 4 seconds
+        }
+
+        function updateNotificationDot() {
+            if (unreadServers.size > 0) {
+                notificationDot.classList.remove('hidden');
+            } else {
+                notificationDot.classList.add('hidden');
+            }
+        }
+
+        function setupNotificationListeners() {
+            if (!db || !appId) return;
+            // Clear any old listeners first
+            notificationListeners.forEach(unsubscribe => unsubscribe());
+            notificationListeners = [];
+
+            const pageLoadFirestoreTimestamp = Timestamp.fromMillis(pageLoadTimestamp);
+
+            servers.forEach(serverName => {
+                const sanitizedServerId = sanitizeForFirestore(serverName);
+                const messagesCollectionPath = `/artifacts/${appId}/public/data/chatRooms/${sanitizedServerId}/messages`;
+                const q = query(collection(db, messagesCollectionPath), where("timestamp", ">", pageLoadFirestoreTimestamp));
+
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === "added") {
+                            const message = change.doc.data();
+                            // Check if message is not from the current user
+                            if (message.sender !== userId) {
+                                unreadServers.add(serverName);
+                                updateNotificationDot();
+                                showToast(serverName);
+                            }
+                        }
+                    });
+                }, (error) => {
+                    console.error(`Error listening for notifications in ${serverName}:`, error);
+                });
+                notificationListeners.push(unsubscribe);
+            });
+        }
+
         function sanitizeForFirestore(text) { return text.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s/g, ''); }
+        
         function createServerList() {
             serverListContainer.innerHTML = '';
             servers.forEach(serverName => {
@@ -525,10 +602,14 @@
             joinView.classList.add('hidden');
             chatView.classList.remove('hidden');
             serverTitle.textContent = serverId;
+            
+            // Mark this server as read and update the notification dot
+            unreadServers.delete(serverId);
+            updateNotificationDot();
 
             const sanitizedServerId = sanitizeForFirestore(serverId);
             const messagesCollectionPath = `/artifacts/${appId}/public/data/chatRooms/${sanitizedServerId}/messages`;
-            const q = query(collection(db, messagesCollectionPath)); 
+            const q = query(collection(db, messagesCollectionPath), orderBy("timestamp")); 
 
             unsubscribeMessages = onSnapshot(q, (snapshot) => {
                 chatMessages.innerHTML = '';
@@ -537,6 +618,7 @@
                     messages.push(doc.data());
                 });
 
+                // Client-side sorting is more reliable without needing composite indexes
                 messages.sort((a, b) => {
                     const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
                     const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
@@ -645,7 +727,4 @@
 
 </body>
 </html>
-
-
-
 
